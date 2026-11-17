@@ -77,8 +77,8 @@ public final class Resident implements Cell
 		return this;
 	}
 
-	public boolean transition()
-	{	boolean changed = isStable();
+	public boolean transition() {
+		boolean changed = !isStable();
 		amAlive = willBeAlive;
 		return changed;
 	}
