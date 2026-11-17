@@ -58,7 +58,9 @@ public final class Resident implements Cell
 		if( southeast.isAlive()) ++neighbors;
 		if( southwest.isAlive()) ++neighbors;
 
-		willBeAlive = (neighbors==3 || (amAlive && neighbors==2));
+		LifeRule rule = RuleManager.getRule();
+		willBeAlive = rule.nextState(amAlive, neighbors);
+
 		return !isStable();
 	}
 

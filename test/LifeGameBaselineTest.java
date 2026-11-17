@@ -2,6 +2,9 @@
 import com.holub.life.Resident;
 import com.holub.life.Cell;
 import org.junit.jupiter.api.Test;
+import com.holub.life.RuleManager;
+import com.holub.life.HighLifeRule;
+import com.holub.life.ConwayRule;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -119,6 +122,40 @@ public class LifeGameBaselineTest {
 
         assertTrue(changed,
                 "transition() should return true when cell changes");
+    }
+
+    @Test
+    void highLifeRuleWorksWithResident() {
+        RuleManager.setRule(new HighLifeRule());
+
+        try {
+            Resident cell = new Resident();
+
+            Cell[] neighbors = new Cell[8];
+
+            for (int i = 0; i < 8; i++) {
+                neighbors[i] = new Resident();
+
+                if (i < 6) {
+                    neighbors[i].userClicked(null, null);
+                }
+            }
+
+            cell.figureNextState(
+                    neighbors[0], neighbors[1],
+                    neighbors[2], neighbors[3],
+                    neighbors[4], neighbors[5],
+                    neighbors[6], neighbors[7]
+            );
+
+            cell.transition();
+
+            assertTrue(cell.isAlive(),
+                    "HighLife: dead cell with 6 neighbors should become alive");
+
+        } finally {
+            RuleManager.setRule(new ConwayRule());
+        }
     }
 
 }

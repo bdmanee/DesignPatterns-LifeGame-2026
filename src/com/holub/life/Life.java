@@ -29,7 +29,32 @@ public final class Life extends JFrame
 		setDefaultCloseOperation	( EXIT_ON_CLOSE 		);
 		getContentPane().setLayout	( new BorderLayout()	);
 		getContentPane().add( Universe.instance(), BorderLayout.CENTER); //{=life.java.install}
+		JMenu rulesMenu = new JMenu("Rules");
 
+		JRadioButtonMenuItem conwayItem =
+				new JRadioButtonMenuItem("Conway", true);
+
+		JRadioButtonMenuItem highLifeItem =
+				new JRadioButtonMenuItem("HighLife");
+
+		ButtonGroup ruleGroup = new ButtonGroup();
+		ruleGroup.add(conwayItem);
+		ruleGroup.add(highLifeItem);
+
+		conwayItem.addActionListener(e -> {
+			RuleManager.setRule(new ConwayRule());
+			setTitle("Game of Life - Conway");
+		});
+
+		highLifeItem.addActionListener(e -> {
+			RuleManager.setRule(new HighLifeRule());
+			setTitle("Game of Life - HighLife");
+		});
+
+		rulesMenu.add(conwayItem);
+		rulesMenu.add(highLifeItem);
+
+		getJMenuBar().add(rulesMenu);
 		pack();
 		setVisible( true );
 	}
