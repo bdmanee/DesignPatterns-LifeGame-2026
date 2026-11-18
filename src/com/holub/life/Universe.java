@@ -47,6 +47,8 @@ public class Universe extends JPanel
 	// The constructor is private so that the universe can be created
 	// only by an outer-class method [Neighborhood.createUniverse()].
 
+	private LifePattern selectedPattern = null;
+
 	private Universe()
 	{	// Create the nested Cells that comprise the "universe." A bug
 		// in the current implementation causes the program to fail
@@ -91,16 +93,66 @@ public class Universe extends JPanel
 		setMinimumSize	( PREFERRED_SIZE );
 		setOpaque		( true			 );
 
-		addMouseListener					//{=Universe.mouse}
-		(	new MouseAdapter()
-			{	public void mousePressed(MouseEvent e)
-				{	Rectangle bounds = getBounds();
-					bounds.x = 0;
-					bounds.y = 0;
-					outermostCell.userClicked(e.getPoint(),bounds);
-					repaint();
+
+		addMouseListener(
+				new MouseAdapter() {
+					@Override
+					public void mousePressed(MouseEvent e) {
+						Rectangle bounds = getBounds();
+						bounds.x = 0;
+						bounds.y = 0;
+
+						if (selectedPattern == null) {
+							outermostCell.userClicked(e.getPoint(), bounds);
+						} else {
+							if (bounds.width <= 0 || bounds.height <= 0) {
+								return;
+							}
+
+							int boardSize = outermostCell.widthInCells();
+
+							int column = e.getX() * boardSize / bounds.width;
+							int row = e.getY() * boardSize / bounds.height;
+
+							placePattern(selectedPattern, row, column);
+						}
+
+						repaint();
+					}
 				}
-			}
+		);
+
+
+		MenuSite.addLine(this, "Patterns", "Normal Click",
+				new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						selectedPattern = null;
+					}
+				}
+		);
+
+		MenuSite.addLine(this, "Patterns", "Glider",
+				new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						selectedPattern = PatternFactory.createPattern("glider");
+					}
+				}
+		);
+
+		MenuSite.addLine(this, "Patterns", "Blinker",
+				new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						selectedPattern = PatternFactory.createPattern("blinker");
+					}
+				}
+		);
+
+		MenuSite.addLine(this, "Patterns", "Block",
+				new ActionListener() {
+					public void actionPerformed(ActionEvent e) {
+						selectedPattern = PatternFactory.createPattern("block");
+					}
+				}
 		);
 
 		MenuSite.addLine( this, "Grid", "Clear",
@@ -153,6 +205,53 @@ public class Universe extends JPanel
 				}
 			}
 		);
+	}
+
+	public void placePattern(LifePattern pattern, int startRow, int startColumn) {
+		if (pattern == null) {
+			throw new IllegalArgumentException("Pattern cannot be null");
+		}
+
+		boolean[][] cells = pattern.getCells();
+
+		int boardSize = outermostCell.widthInCells();
+		Rectangle bounds = new Rectangle(
+				0, 0, getWidth(), getHeight()
+		);
+
+		if (bounds.width <= 0 || bounds.height <= 0) {
+			return;
+		}
+
+		for (int row = 0; row < cells.length; row++) {
+			for (int column = 0; column < cells[row].length; column++) {
+
+				if (!cells[row][column]) {
+					continue;
+				}
+
+				int targetRow = startRow + row;
+				int targetColumn = startColumn + column;
+
+				if (targetRow < 0 || targetColumn < 0 ||
+						targetRow >= boardSize ||
+						targetColumn >= boardSize) {
+					continue;
+				}
+
+				int x = (int) ((targetColumn + 0.5)
+						* bounds.width / boardSize);
+
+				int y = (int) ((targetRow + 0.5)
+						* bounds.height / boardSize);
+
+				((Neighborhood) outermostCell).setAliveAt(
+						new Point(x, y), bounds
+				);
+			}
+		}
+
+		repaint();
 	}
 
 	/** Singleton Accessor. The Universe object itself is manufactured
