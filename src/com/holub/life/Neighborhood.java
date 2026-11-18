@@ -473,6 +473,24 @@ public final class Neighborhood implements Cell
 	{	return gridSize * grid[0][0].widthInCells();
 	}
 
+	public int countAliveCells() {
+		int count = 0;
+
+		for (int row = 0; row < gridSize; row++) {
+			for (int column = 0; column < gridSize; column++) {
+				Cell cell = grid[row][column];
+
+				if (cell instanceof Neighborhood) {
+					count += ((Neighborhood) cell).countAliveCells();
+				} else if (cell.isAlive()) {
+					count++;
+				}
+			}
+		}
+
+		return count;
+	}
+
 	public void clear()
 	{	activeEdges.clear();
 

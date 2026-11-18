@@ -9,6 +9,9 @@ import java.awt.event.*;
 import com.holub.io.Files;
 import com.holub.ui.MenuSite;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 import com.holub.life.Cell;
 import com.holub.life.Storable;
 import com.holub.life.Clock;
@@ -46,8 +49,10 @@ public class Universe extends JPanel
 
 	// The constructor is private so that the universe can be created
 	// only by an outer-class method [Neighborhood.createUniverse()].
-
 	private LifePattern selectedPattern = null;
+	private final List<GameStateListener> gameStateListeners =
+			new CopyOnWriteArrayList<>();
+	private int generationCount = 0;
 
 	private Universe()
 	{	// Create the nested Cells that comprise the "universe." A bug
@@ -116,7 +121,7 @@ public class Universe extends JPanel
 
 							placePattern(selectedPattern, row, column);
 						}
-
+						notifyGameStateChanged();
 						repaint();
 					}
 				}
@@ -158,9 +163,14 @@ public class Universe extends JPanel
 		MenuSite.addLine( this, "Grid", "Clear",
 			new ActionListener()
 			{	public void actionPerformed(ActionEvent e)
-				{	outermostCell.clear();
-					repaint();
-				}
+			{
+				Clock.instance().stop();
+				outermostCell.clear();
+				generationCount = 0;
+
+				notifyGameStateChanged();
+				repaint();
+			}
 			}
 		);
 
@@ -191,19 +201,24 @@ public class Universe extends JPanel
 			}
 		);
 
-		Clock.instance().addClockListener //{=Universe.clock.subscribe}
-		(	new Clock.Listener()
-			{	public void tick()
-				{	if( outermostCell.figureNextState
-						   ( Cell.DUMMY,Cell.DUMMY,Cell.DUMMY,Cell.DUMMY,
-							 Cell.DUMMY,Cell.DUMMY,Cell.DUMMY,Cell.DUMMY
-						   )
-					  )
-					{	if( outermostCell.transition() )
-							refreshNow();
+		Clock.instance().addClockListener(
+				new Clock.Listener() {
+					public void tick() {
+						generationCount++;
+
+
+						if (outermostCell.figureNextState(
+								Cell.DUMMY, Cell.DUMMY, Cell.DUMMY, Cell.DUMMY,
+								Cell.DUMMY, Cell.DUMMY, Cell.DUMMY, Cell.DUMMY
+						)) {
+							if (outermostCell.transition()) {
+								refreshNow();
+							}
+						}
+
+						notifyGameStateChanged();
 					}
 				}
-			}
 		);
 	}
 
@@ -261,27 +276,61 @@ public class Universe extends JPanel
 	public static Universe instance()
 	{	return theInstance;
 	}
+	public void addGameStateListener(GameStateListener listener) {
+		if (listener == null) {
+			throw new IllegalArgumentException("Listener cannot be null");
+		}
 
-	private void doLoad()
-	{	try
-		{
+		gameStateListeners.add(listener);
+	}
+	public int getAliveCellCount() {
+		return ((Neighborhood) outermostCell).countAliveCells();
+	}
+
+	private void notifyGameStateChanged() {
+		int generation = generationCount;
+		int aliveCells = getAliveCellCount();
+
+		SwingUtilities.invokeLater(() -> {
+			for (GameStateListener listener : gameStateListeners) {
+				listener.onGameStateChanged(generation, aliveCells);
+			}
+		});
+	}
+
+
+	private void doLoad() {
+		try {
 			FileInputStream in = new FileInputStream(
-			   Files.userSelected(".",".life","Life File","Load"));
+					Files.userSelected(".", ".life", "Life File", "Load")
+			);
 
-			Clock.instance().stop();		// stop the game and
-			outermostCell.clear();			// clear the board.
+			Clock.instance().stop();
+			outermostCell.clear();
 
 			Storable memento = outermostCell.createMemento();
-			memento.load( in );
-			outermostCell.transfer( memento, new Point(0,0), Cell.LOAD );
+			memento.load(in);
+			outermostCell.transfer(memento, new Point(0, 0), Cell.LOAD);
 
 			in.close();
+
+			generationCount = 0;
+
+			notifyGameStateChanged();
+			repaint();
+
+		} catch (IOException theException) {
+			JOptionPane.showMessageDialog(
+					null,
+					"Read Failed!",
+					"The Game of Life",
+					JOptionPane.ERROR_MESSAGE
+			);
+
+			// Refresh board even if loading fails
+			notifyGameStateChanged();
+			repaint();
 		}
-		catch( IOException theException )
-		{	JOptionPane.showMessageDialog( null, "Read Failed!",
-					"The Game of Life", JOptionPane.ERROR_MESSAGE);
-		}
-		repaint();
 	}
 
 	private void doStore()
