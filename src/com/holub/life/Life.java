@@ -28,7 +28,45 @@ public final class Life extends JFrame
 
 		setDefaultCloseOperation	( EXIT_ON_CLOSE 		);
 		getContentPane().setLayout	( new BorderLayout()	);
-		getContentPane().add( Universe.instance(), BorderLayout.CENTER); //{=life.java.install}
+
+		JScrollPane scrollPane = new JScrollPane(
+				Universe.instance(),
+				JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+				JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED
+		);
+
+		scrollPane.getViewport().setBackground(NeonTheme.BACKGROUND);
+		scrollPane.setBackground(NeonTheme.BACKGROUND);
+
+		scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+		scrollPane.getHorizontalScrollBar().setUnitIncrement(16);
+
+		JScrollBar verticalBar = scrollPane.getVerticalScrollBar();
+		JScrollBar horizontalBar = scrollPane.getHorizontalScrollBar();
+
+		verticalBar.setBackground(NeonTheme.PANEL);
+		horizontalBar.setBackground(NeonTheme.PANEL);
+
+		verticalBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+			@Override
+			protected void configureScrollBarColors() {
+				thumbColor = NeonTheme.PURPLE;
+				trackColor = NeonTheme.BACKGROUND;
+			}
+		});
+
+		horizontalBar.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+			@Override
+			protected void configureScrollBarColors() {
+				thumbColor = NeonTheme.PURPLE;
+				trackColor = NeonTheme.BACKGROUND;
+			}
+		});
+
+		scrollPane.setPreferredSize(new Dimension(850, 650));
+
+		getContentPane().add(scrollPane, BorderLayout.CENTER);
+		//{=life.java.install}
 
 		GameStatusPanel statusPanel = new GameStatusPanel();
 
@@ -63,7 +101,15 @@ public final class Life extends JFrame
 		rulesMenu.add(highLifeItem);
 
 		getJMenuBar().add(rulesMenu);
+
+// Apply neon styling to all menus
+		NeonTheme.applyMenuTheme(getJMenuBar());
+
+		getContentPane().setBackground(NeonTheme.BACKGROUND);
+
 		pack();
-		setVisible( true );
+		setVisible(true);
+
+
 	}
 }

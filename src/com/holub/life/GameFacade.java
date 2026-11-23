@@ -19,6 +19,10 @@ public class GameFacade {
         Universe.instance().setDrawingMode(mode);
     }
 
+    public void setPatternSpacing(int spacing) {
+        Universe.instance().setPatternSpacing(spacing);
+    }
+
     public int getAliveCellCount() {
         return Universe.instance().getAliveCellCount();
     }

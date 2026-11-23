@@ -30,6 +30,27 @@ public class Clock
 {
 	private javax.swing.Timer clock;
 
+	private int selectedSpeed = 150;
+
+	public int getSelectedSpeed() {
+		return selectedSpeed;
+	}
+
+	public void setSelectedSpeed(int milliseconds) {
+		if (milliseconds <= 0) {
+			return;
+		}
+
+		selectedSpeed = milliseconds;
+
+		// If the game is already running,
+		// immediately apply the new speed.
+		if (clock != null && clock.isRunning()) {
+			clock.setDelay(selectedSpeed);
+			clock.setInitialDelay(selectedSpeed);
+		}
+	}
+
 
 	// The clock can't be an everything-is-static singleton because
 	// it creates a menu, and it can't do that until the menus
@@ -86,35 +107,69 @@ public class Clock
 	/** Create the menu that controls the clock speed and
 	 *  put it onto the menu site. 
 	 */
-	private void createMenus()
-	{
-		// First set up a single listener that will handle all the
-		// menu-selection events except "Exit"
 
-		ActionListener modifier =									//{=startSetup}
-			new ActionListener()
-			{	public void actionPerformed(ActionEvent e)
-				{
-					String name = ((JMenuItem)e.getSource()).getName();
-					char toDo = name.charAt(0);
 
-					if( toDo=='T' )
-						tick();				      // single tick
-					else
-						startTicking(   toDo=='A' ? 500:	  // agonizing
-										toDo=='S' ? 150:	  // slow
-										toDo=='M' ? 70 :	  // medium
-										toDo=='F' ? 30 : 0 ); // fast
-				}
-			};
-																	// {=midSetup}
-		MenuSite.addLine(this,"Go","Halt",  			modifier);
-		MenuSite.addLine(this,"Go","Tick (Single Step)",modifier);
-		MenuSite.addLine(this,"Go","Agonizing",	 	  	modifier);
-		MenuSite.addLine(this,"Go","Slow",		 		modifier);
-		MenuSite.addLine(this,"Go","Medium",	 	 	modifier);
-		MenuSite.addLine(this,"Go","Fast",				modifier); // {=endSetup}
-	}	//{=endCreateMenus}
+
+	private void createMenus() {
+
+		String[] names = {
+				"Very Slow",
+				"Slow",
+				"Medium",
+				"Fast"
+		};
+
+		int[] speeds = {500, 150, 70, 30};
+
+		for (int i = 0; i < names.length; i++) {
+
+			final int speed = speeds[i];
+
+			MenuSite.addLine(
+					this,
+					"Speed",
+					names[i],
+					e -> {
+						setSelectedSpeed(speed);
+						updateSpeedMenu();
+					}
+			);
+		}
+
+		updateSpeedMenu();
+	}
+
+	private void updateSpeedMenu() {
+
+		String[] names = {
+				"Very Slow",
+				"Slow",
+				"Medium",
+				"Fast"
+		};
+
+		int[] speeds = {500, 150, 70, 30};
+
+		for (int i = 0; i < names.length; i++) {
+
+			JMenuItem item = MenuSite.getMyMenuItem(
+					this,
+					"Speed",
+					names[i]
+			);
+
+			if (item != null) {
+				boolean selected = selectedSpeed == speeds[i];
+
+				item.setText(
+						(selected ? "\u2713  " : "     ")
+								+ names[i]
+				);
+			}
+		}
+	}
+
+
 
 	private Publisher publisher = new Publisher();
 

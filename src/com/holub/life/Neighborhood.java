@@ -370,17 +370,16 @@ public final class Neighborhood implements Cell
 				subcell.translate(-compoundWidth, subcell.height);
 			}
 
-			g = g.create();
-			g.setColor( Colors.LIGHT_ORANGE );
-			g.drawRect( here.x, here.y, here.width, here.height );
+			Graphics borderGraphics = g.create();
 
-			if( amActive )
-			{	g.setColor( Color.BLUE );
-				g.drawRect(	here.x+1,	  here.y+1,
-							here.width-2, here.height-2 );
-			}
+			borderGraphics.setColor(NeonTheme.GRID);
+			borderGraphics.drawRect(
+					here.x, here.y,
+					here.width - 1, here.height - 1
+			);
 
-			g.dispose();
+			borderGraphics.dispose();
+
 		}
 		catch( InterruptedException e ) 
 		{	// thrown from waitForTrue. Just
