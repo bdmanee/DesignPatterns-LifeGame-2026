@@ -35,6 +35,7 @@ public final class Life extends JFrame
 		Universe.instance().addGameStateListener(statusPanel);
 
 		getContentPane().add(statusPanel, BorderLayout.NORTH);
+		getContentPane().add(new GameControlPanel(), BorderLayout.SOUTH);
 
 		JMenu rulesMenu = new JMenu("Rules");
 

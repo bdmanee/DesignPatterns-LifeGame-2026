@@ -50,6 +50,8 @@ public class Universe extends JPanel
 	// The constructor is private so that the universe can be created
 	// only by an outer-class method [Neighborhood.createUniverse()].
 	private LifePattern selectedPattern = null;
+	private DrawingMode drawingMode = DrawingMode.CLICK;
+	private final PatternStampTool stampTool = new PatternStampTool(4);
 	private final List<GameStateListener> gameStateListeners =
 			new CopyOnWriteArrayList<>();
 	private int generationCount = 0;
@@ -101,31 +103,123 @@ public class Universe extends JPanel
 
 		addMouseListener(
 				new MouseAdapter() {
+
 					@Override
 					public void mousePressed(MouseEvent e) {
+						if (!SwingUtilities.isLeftMouseButton(e)) {
+							return;
+						}
+
+						stampTool.start();
+
 						Rectangle bounds = getBounds();
+
 						bounds.x = 0;
 						bounds.y = 0;
 
+
 						if (selectedPattern == null) {
-							outermostCell.userClicked(e.getPoint(), bounds);
+							if (drawingMode == DrawingMode.CLICK) {
+								outermostCell.userClicked(e.getPoint(), bounds);
+							} else {
+								drawCellAt(e.getPoint());
+							}
 						} else {
+
 							if (bounds.width <= 0 || bounds.height <= 0) {
 								return;
 							}
 
 							int boardSize = outermostCell.widthInCells();
 
+
 							int column = e.getX() * boardSize / bounds.width;
 							int row = e.getY() * boardSize / bounds.height;
 
-							placePattern(selectedPattern, row, column);
+							if (row >= 0 && column >= 0
+									&& row < boardSize && column < boardSize) {
+
+								placePattern(selectedPattern, row, column);
+
+								if (drawingMode == DrawingMode.DRAW) {
+									stampTool.shouldStamp(row, column);
+								}
+							}
+
 						}
 						notifyGameStateChanged();
 						repaint();
 					}
 				}
 		);
+
+
+		addMouseMotionListener(new MouseMotionAdapter() {
+
+			private Point lastDragPoint = null;
+
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				lastDragPoint = null;
+			}
+
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				if (!SwingUtilities.isLeftMouseButton(e)) {
+					return;
+				}
+
+				if (drawingMode == DrawingMode.DRAW
+						&& selectedPattern != null) {
+
+					int boardSize = outermostCell.widthInCells();
+
+					if (getWidth() <= 0 || getHeight() <= 0) {
+						return;
+					}
+
+					Point currentPoint = e.getPoint();
+
+					if (lastDragPoint == null) {
+						lastDragPoint = currentPoint;
+					}
+
+					int dx = currentPoint.x - lastDragPoint.x;
+					int dy = currentPoint.y - lastDragPoint.y;
+					int steps = Math.max(Math.abs(dx), Math.abs(dy));
+
+					for (int i = 0; i <= steps; i++) {
+						int x = lastDragPoint.x;
+						int y = lastDragPoint.y;
+
+						if (steps > 0) {
+							x += dx * i / steps;
+							y += dy * i / steps;
+						}
+
+						if (x < 0 || y < 0
+								|| x >= getWidth() || y >= getHeight()) {
+							continue;
+						}
+
+						int column = x * boardSize / getWidth();
+						int row = y * boardSize / getHeight();
+
+						if (stampTool.shouldStamp(row, column)) {
+							placePattern(selectedPattern, row, column);
+						}
+					}
+
+					lastDragPoint = currentPoint;
+					notifyGameStateChanged();
+					repaint();
+
+				} else if (drawingMode != DrawingMode.CLICK) {
+					drawCellAt(e.getPoint());
+				}
+			}
+		});
+
 
 
 		MenuSite.addLine(this, "Patterns", "Normal Click",
@@ -276,6 +370,38 @@ public class Universe extends JPanel
 	public static Universe instance()
 	{	return theInstance;
 	}
+
+	public void setDrawingMode(DrawingMode mode) {
+		if (mode == null) {
+			throw new IllegalArgumentException("Drawing mode cannot be null");
+		}
+
+		this.drawingMode = mode;
+
+		if (mode == DrawingMode.ERASE) {
+			selectedPattern = null;
+		}
+	}
+
+	private void drawCellAt(Point point) {
+		if (drawingMode == DrawingMode.CLICK) {
+			return;
+		}
+
+		Rectangle bounds = new Rectangle(
+				0, 0, getWidth(), getHeight()
+		);
+
+		boolean alive = drawingMode == DrawingMode.DRAW;
+
+		((Neighborhood) outermostCell).setCellStateAt(
+				point, bounds, alive
+		);
+
+		notifyGameStateChanged();
+		repaint();
+	}
+
 	public void addGameStateListener(GameStateListener listener) {
 		if (listener == null) {
 			throw new IllegalArgumentException("Listener cannot be null");

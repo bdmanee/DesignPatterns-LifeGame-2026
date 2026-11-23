@@ -66,7 +66,9 @@ public class Clock
 		{	tick =	new TimerTask()
 					{	public void run(){ tick(); }
 					};
-			clock.scheduleAtFixedRate( tick, 0, millisecondsBetweenTicks);
+
+			clock.schedule(tick, 0, millisecondsBetweenTicks);
+
 		}
 	}
 

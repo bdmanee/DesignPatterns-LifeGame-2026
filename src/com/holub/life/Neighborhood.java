@@ -465,6 +465,54 @@ public final class Neighborhood implements Cell
 		rememberThatCellAtEdgeChangedState(row, column);
 	}
 
+	public void setCellStateAt(Point here, Rectangle surface, boolean alive) {
+
+		if (here == null || surface == null ||
+				surface.width <= 0 || surface.height <= 0) {
+			return;
+		}
+
+		if (here.x < 0 || here.y < 0 ||
+				here.x >= surface.width ||
+				here.y >= surface.height) {
+			return;
+		}
+
+		int pixelsPerCell = surface.width / gridSize;
+
+		if (pixelsPerCell <= 0) {
+			return;
+		}
+
+		int row = here.y / pixelsPerCell;
+		int column = here.x / pixelsPerCell;
+
+		if (row >= gridSize || column >= gridSize) {
+			return;
+		}
+
+		Point position = new Point(
+				here.x % pixelsPerCell,
+				here.y % pixelsPerCell
+		);
+
+		Rectangle subcell = new Rectangle(
+				0, 0, pixelsPerCell, pixelsPerCell
+		);
+
+		Cell target = grid[row][column];
+
+		if (target instanceof Neighborhood) {
+			((Neighborhood) target).setCellStateAt(
+					position, subcell, alive
+			);
+		} else if (target.isAlive() != alive) {
+			target.userClicked(position, subcell);
+			amActive = true;
+			rememberThatCellAtEdgeChangedState(row, column);
+		}
+	}
+
 	public boolean isAlive()
 	{	return true;
 	}
