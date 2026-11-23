@@ -27,8 +27,9 @@ import com.holub.tools.Publisher;
  */
 
 public class Clock
-{	private Timer			clock		= new Timer();
-	private TimerTask		tick		= null;
+{
+	private javax.swing.Timer clock;
+
 
 	// The clock can't be an everything-is-static singleton because
 	// it creates a menu, and it can't do that until the menus
@@ -56,21 +57,24 @@ public class Clock
 	 *  					 the clock should be stopped.
 	 */
 
-	public void startTicking( int millisecondsBetweenTicks )
-	{	if(tick != null)
-		{	tick.cancel();
-			tick=null;
+
+	public void startTicking(int millisecondsBetweenTicks) {
+		if (clock != null) {
+			clock.stop();
+			clock = null;
 		}
 
-		if( millisecondsBetweenTicks > 0 )
-		{	tick =	new TimerTask()
-					{	public void run(){ tick(); }
-					};
+		if (millisecondsBetweenTicks > 0) {
+			clock = new javax.swing.Timer(
+					millisecondsBetweenTicks,
+					e -> tick()
+			);
 
-			clock.schedule(tick, 0, millisecondsBetweenTicks);
-
+			clock.setCoalesce(true);
+			clock.start();
 		}
 	}
+
 
 	/** Stop the clock
 	 */

@@ -497,34 +497,10 @@ public class Universe extends JPanel
 		outermostCell.redraw(g, panelBounds, true);		//{=Universe.redraw1}
 	}
 
-	/** Force a screen refresh by queing a request on
-	 *  the Swing event queue. This is an example of the
-	 *  Active Object pattern (not covered by the Gang of Four).
-	 *  This method is called on every clock tick. Note that
-	 *  the redraw() method on a given <code>Cell</code>
-	 *  does nothing if the <code>Cell</code> doesn't
-	 *  have to be refreshed.
-	 */
 
-	private void refreshNow()
-	{	SwingUtilities.invokeLater
-		(	new Runnable()
-			{	public void run()
-				{	Graphics g = getGraphics();
-					if( g == null )		// Universe not displayable
-						return;
-					try
-					{
-						Rectangle panelBounds = getBounds();
-						panelBounds.x = 0;
-						panelBounds.y = 0;
-						outermostCell.redraw(g, panelBounds, false); //{=Universe.redraw2}
-					}
-					finally
-					{	g.dispose();
-					}
-				}
-			}
-		);
+	/** Request a Swing repaint after the game state changes. */
+	private void refreshNow() {
+		repaint();
 	}
+
 }

@@ -13,16 +13,15 @@ public class GameControlPanel extends JPanel {
         JButton pauseButton = new JButton("Pause");
         JButton stepButton = new JButton("Step");
 
-        playButton.addActionListener(e ->
-                Clock.instance().startTicking(150));
+        GameFacade game = new GameFacade();
 
-        pauseButton.addActionListener(e ->
-                Clock.instance().stop());
+        GameCommand playCommand = new PlayCommand(game, () -> 150);
+        GameCommand pauseCommand = new PauseCommand(game);
+        GameCommand stepCommand = new StepCommand(game);
 
-        stepButton.addActionListener(e -> {
-            Clock.instance().stop();
-            Clock.instance().tick();
-        });
+        playButton.addActionListener(e -> playCommand.execute());
+        pauseButton.addActionListener(e -> pauseCommand.execute());
+        stepButton.addActionListener(e -> stepCommand.execute());
 
         add(playButton);
         add(pauseButton);
@@ -36,8 +35,9 @@ public class GameControlPanel extends JPanel {
                     (DrawingMode) drawingModeBox.getSelectedItem();
 
             if (selected != null) {
-                Universe.instance().setDrawingMode(selected);
+                game.setDrawingMode(selected);
             }
+
         });
 
         add(new JLabel("Drawing Mode:"));
