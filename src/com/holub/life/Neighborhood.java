@@ -418,98 +418,53 @@ public final class Neighborhood implements Cell
 		rememberThatCellAtEdgeChangedState(row, column);
 	}
 
-	public void setAliveAt(Point here, Rectangle surface) {
+	/** Set the state of the cell at (row, column), where the
+	 *  position is counted in cells from the upper-left corner of
+	 *  this neighborhood. The request is passed down to the subcell
+	 *  that contains the position, so it works the same way for
+	 *  any nesting depth.
+	 */
+	public boolean setAliveAt(int row, int column, boolean alive)
+	{	int subcellWidth = grid[0][0].widthInCells();
 
-		if (here == null || surface == null || surface.width <= 0) {
-			return;
+		if( row < 0 || column < 0
+				|| row >= widthInCells() || column >= widthInCells() )
+			return false;
+
+		int gridRow    = row / subcellWidth;
+		int gridColumn = column / subcellWidth;
+
+		boolean changed = grid[gridRow][gridColumn].setAliveAt(
+				row % subcellWidth, column % subcellWidth, alive);
+
+		if( changed )
+		{	amActive = true;
+			rememberThatCellAtEdgeChangedState(gridRow, gridColumn);
 		}
-
-		if (here.x < 0 || here.y < 0 ||
-				here.x >= surface.width ||
-				here.y >= surface.height) {
-			return;
-		}
-
-		if (surface.width / gridSize == 0) {
-			return;
-		}
-
-		int pixelsPerCell = surface.width / gridSize;
-
-		int row = here.y / pixelsPerCell;
-		int column = here.x / pixelsPerCell;
-
-		if (row >= gridSize || column >= gridSize) {
-			return;
-		}
-
-		int rowOffset = here.y % pixelsPerCell;
-		int columnOffset = here.x % pixelsPerCell;
-
-		Point position = new Point(columnOffset, rowOffset);
-
-		Rectangle subcell = new Rectangle(
-				0, 0, pixelsPerCell, pixelsPerCell
-		);
-
-		Cell target = grid[row][column];
-
-		if (target instanceof Neighborhood) {
-			((Neighborhood) target).setAliveAt(position, subcell);
-		} else if (!target.isAlive()) {
-			target.userClicked(position, subcell);
-		}
-
-		amActive = true;
-		rememberThatCellAtEdgeChangedState(row, column);
+		return changed;
 	}
 
-	public void setCellStateAt(Point here, Rectangle surface, boolean alive) {
+	public boolean isAliveAt(int row, int column)
+	{	int subcellWidth = grid[0][0].widthInCells();
 
-		if (here == null || surface == null ||
-				surface.width <= 0 || surface.height <= 0) {
-			return;
-		}
+		if( row < 0 || column < 0
+				|| row >= widthInCells() || column >= widthInCells() )
+			return false;
 
-		if (here.x < 0 || here.y < 0 ||
-				here.x >= surface.width ||
-				here.y >= surface.height) {
-			return;
-		}
+		return grid[row / subcellWidth][column / subcellWidth]
+				.isAliveAt(row % subcellWidth, column % subcellWidth);
+	}
 
-		int pixelsPerCell = surface.width / gridSize;
+	public void accept(CellVisitor visitor, int row, int column)
+	{	visitor.visitNeighborhood(this, row, column);
 
-		if (pixelsPerCell <= 0) {
-			return;
-		}
+		int subcellWidth = grid[0][0].widthInCells();
 
-		int row = here.y / pixelsPerCell;
-		int column = here.x / pixelsPerCell;
-
-		if (row >= gridSize || column >= gridSize) {
-			return;
-		}
-
-		Point position = new Point(
-				here.x % pixelsPerCell,
-				here.y % pixelsPerCell
-		);
-
-		Rectangle subcell = new Rectangle(
-				0, 0, pixelsPerCell, pixelsPerCell
-		);
-
-		Cell target = grid[row][column];
-
-		if (target instanceof Neighborhood) {
-			((Neighborhood) target).setCellStateAt(
-					position, subcell, alive
-			);
-		} else if (target.isAlive() != alive) {
-			target.userClicked(position, subcell);
-			amActive = true;
-			rememberThatCellAtEdgeChangedState(row, column);
-		}
+		for( int r = 0; r < gridSize; ++r )
+			for( int c = 0; c < gridSize; ++c )
+				grid[r][c].accept( visitor,
+								   row + r * subcellWidth,
+								   column + c * subcellWidth );
 	}
 
 	public boolean isAlive()
@@ -518,24 +473,6 @@ public final class Neighborhood implements Cell
 
 	public int widthInCells()
 	{	return gridSize * grid[0][0].widthInCells();
-	}
-
-	public int countAliveCells() {
-		int count = 0;
-
-		for (int row = 0; row < gridSize; row++) {
-			for (int column = 0; column < gridSize; column++) {
-				Cell cell = grid[row][column];
-
-				if (cell instanceof Neighborhood) {
-					count += ((Neighborhood) cell).countAliveCells();
-				} else if (cell.isAlive()) {
-					count++;
-				}
-			}
-		}
-
-		return count;
 	}
 
 	public void clear()

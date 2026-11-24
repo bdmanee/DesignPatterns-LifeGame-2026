@@ -349,40 +349,12 @@ public class Universe extends JPanel
 
 		boolean[][] cells = pattern.getCells();
 
-		int boardSize = outermostCell.widthInCells();
-		Rectangle bounds = new Rectangle(
-				0, 0, getWidth(), getHeight()
-		);
-
-		if (bounds.width <= 0 || bounds.height <= 0) {
-			return;
-		}
-
 		for (int row = 0; row < cells.length; row++) {
 			for (int column = 0; column < cells[row].length; column++) {
-
-				if (!cells[row][column]) {
-					continue;
+				if (cells[row][column]) {
+					outermostCell.setAliveAt(
+							startRow + row, startColumn + column, true);
 				}
-
-				int targetRow = startRow + row;
-				int targetColumn = startColumn + column;
-
-				if (targetRow < 0 || targetColumn < 0 ||
-						targetRow >= boardSize ||
-						targetColumn >= boardSize) {
-					continue;
-				}
-
-				int x = (int) ((targetColumn + 0.5)
-						* bounds.width / boardSize);
-
-				int y = (int) ((targetRow + 0.5)
-						* bounds.height / boardSize);
-
-				((Neighborhood) outermostCell).setAliveAt(
-						new Point(x, y), bounds
-				);
 			}
 		}
 
@@ -418,15 +390,17 @@ public class Universe extends JPanel
 			return;
 		}
 
-		Rectangle bounds = new Rectangle(
-				0, 0, getWidth(), getHeight()
-		);
+		if (getWidth() <= 0 || getHeight() <= 0) {
+			return;
+		}
+
+		int boardSize = outermostCell.widthInCells();
+		int row = point.y * boardSize / getHeight();
+		int column = point.x * boardSize / getWidth();
 
 		boolean alive = drawingMode == DrawingMode.DRAW;
 
-		((Neighborhood) outermostCell).setCellStateAt(
-				point, bounds, alive
-		);
+		outermostCell.setAliveAt(row, column, alive);
 
 		notifyGameStateChanged();
 		repaint();
@@ -440,7 +414,9 @@ public class Universe extends JPanel
 		gameStateListeners.add(listener);
 	}
 	public int getAliveCellCount() {
-		return ((Neighborhood) outermostCell).countAliveCells();
+		AliveCellCounter counter = new AliveCellCounter();
+		outermostCell.accept(counter, 0, 0);
+		return counter.getCount();
 	}
 
 	private void notifyGameStateChanged() {

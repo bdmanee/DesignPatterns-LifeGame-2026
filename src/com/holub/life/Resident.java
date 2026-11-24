@@ -104,6 +104,23 @@ public final class Resident implements Cell
 	{	amAlive = !amAlive;
 	}
 
+	public boolean setAliveAt(int row, int column, boolean alive)
+	{	assert row==0 && column==0;
+		if( amAlive == alive )
+			return false;
+		amAlive = alive;
+		return true;
+	}
+
+	public boolean isAliveAt(int row, int column)
+	{	assert row==0 && column==0;
+		return amAlive;
+	}
+
+	public void accept(CellVisitor visitor, int row, int column)
+	{	visitor.visitResident(this, row, column);
+	}
+
 	public void	   clear()			{amAlive = willBeAlive = false; }
 	public boolean isAlive()		{return amAlive;			    }
 	public Cell    create()			{return new Resident();			}

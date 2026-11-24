@@ -64,6 +64,22 @@ public interface Cell
 	 */
 	boolean isAlive();
 
+	/** Set the state of the cell at (row, column). The position is
+	 *  relative to the upper-left corner of this cell.
+	 *  @return true if the state actually changed.
+	 */
+	boolean setAliveAt(int row, int column, boolean alive);
+
+	/** Return true if the cell at (row, column) is alive. The
+	 *  position is relative to the upper-left corner of this cell.
+	 */
+	boolean isAliveAt(int row, int column);
+
+	/** Visitor support. (row, column) is the position of this cell's
+	 *  upper-left corner on the board.
+	 */
+	void accept(CellVisitor visitor, int row, int column);
+
 	/** Return the specified width plus the current cell's width
 	 */
 	int widthInCells();
@@ -142,6 +158,9 @@ public interface Cell
 
 		public Cell		 edge(int r, int c)	{return this;  			  }
 		public boolean	 isAlive()		   	{return false; 			  }
+		public boolean	 setAliveAt(int r, int c, boolean a){return false;}
+		public boolean	 isAliveAt(int r, int c)	{return false;	  }
+		public void		 accept(CellVisitor v, int r, int c){			  }
 		public Cell 	 create()	   	   	{return this;			  }
 		public Direction isDisruptiveTo()	{return Direction.NONE;	  }
 		public void 	 clear()		   	{						  }
