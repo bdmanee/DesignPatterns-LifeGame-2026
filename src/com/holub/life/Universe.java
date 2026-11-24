@@ -56,6 +56,49 @@ public class Universe extends JPanel
 			new CopyOnWriteArrayList<>();
 	private int generationCount = 0;
 
+	private static final int BOARD_SIZE = 256;
+	private static final int CELL_SIZE = 8;
+
+	private final ZoomModel zoomModel = new ZoomModel();
+
+
+	public double getZoomLevel() {
+		return zoomModel.getZoomLevel();
+	}
+
+	public void setZoomLevel(double zoom) {
+		zoomModel.setZoomLevel(zoom);
+
+		int size = (int) Math.round(
+				BOARD_SIZE * CELL_SIZE * zoomModel.getZoomLevel()
+		);
+
+		Dimension newSize = new Dimension(size, size);
+
+		setPreferredSize(newSize);
+		setMinimumSize(newSize);
+		setMaximumSize(newSize);
+
+		revalidate();
+		repaint();
+	}
+
+	public void zoomIn() {
+		zoomModel.zoomIn();
+		setZoomLevel(zoomModel.getZoomLevel());
+	}
+
+	public void zoomOut() {
+		zoomModel.zoomOut();
+		setZoomLevel(zoomModel.getZoomLevel());
+	}
+
+	public void resetZoom() {
+		zoomModel.resetZoom();
+		setZoomLevel(zoomModel.getZoomLevel());
+	}
+
+
 	private Universe()
 	{	// Create the nested Cells that comprise the "universe." A bug
 		// in the current implementation causes the program to fail
@@ -63,7 +106,7 @@ public class Universe extends JPanel
 		// on the screen.
 
 		outermostCell = new Neighborhood(
-				16,
+				32,
 				new Neighborhood(DEFAULT_GRID_SIZE, new Resident())
 		);
 
@@ -75,7 +118,7 @@ public class Universe extends JPanel
 
 		setBackground(NeonTheme.BACKGROUND);
 
-		Dimension canvasSize = new Dimension(1024, 1024);
+		Dimension canvasSize = new Dimension(2048, 2048);
 
 		setPreferredSize(canvasSize);
 		setMinimumSize(canvasSize);
