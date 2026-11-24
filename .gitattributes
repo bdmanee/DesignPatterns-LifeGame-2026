@@ -1,0 +1,13 @@
+# Store text files with LF in the repository. On Windows git converts
+# them to CRLF in the working folder, so git status stays clean.
+* text=auto eol=lf
+*.java text eol=lf
+*.md text eol=lf
+*.txt text eol=lf
+*.rle text eol=lf
+*.cells text eol=lf
+
+# saved boards are Java serialization, not text
+*.life binary
+*.class binary
+*.jar binary
