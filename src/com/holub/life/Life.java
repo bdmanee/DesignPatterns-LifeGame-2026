@@ -66,46 +66,10 @@ public final class Life extends JFrame
 		scrollPane.setPreferredSize(new Dimension(850, 650));
 		new ZoomController(Universe.instance(), scrollPane);
 
-		getContentPane().add(scrollPane, BorderLayout.CENTER);
-		//{=life.java.install}
-
-		JButton zoomInButton = new JButton("+");
-		JButton zoomOutButton = new JButton("-");
-		JLabel zoomLabel = new JLabel("100%");
-
-		zoomInButton.addActionListener(e -> {
-			Universe.instance().zoomIn();
-			zoomLabel.setText(
-					Math.round(Universe.instance().getZoomLevel() * 100) + "%"
-			);
-		});
-
-		zoomOutButton.addActionListener(e -> {
-			Universe.instance().zoomOut();
-			zoomLabel.setText(
-					Math.round(Universe.instance().getZoomLevel() * 100) + "%"
-			);
-		});
-
-		JPanel zoomPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 5));
-		zoomPanel.setBackground(NeonTheme.PANEL);
-
-		zoomInButton.setBackground(NeonTheme.PANEL);
-		zoomOutButton.setBackground(NeonTheme.PANEL);
-
-		zoomInButton.setForeground(NeonTheme.CYAN);
-		zoomOutButton.setForeground(NeonTheme.CYAN);
-		zoomLabel.setForeground(NeonTheme.TEXT);
-
-		zoomPanel.add(zoomOutButton);
-		zoomPanel.add(zoomLabel);
-		zoomPanel.add(zoomInButton);
-
 		JPanel boardPanel = new JPanel(new BorderLayout());
-		boardPanel.add(zoomPanel, BorderLayout.NORTH);
+		boardPanel.add(new ZoomPanel(Universe.instance().getZoomModel()),
+					   BorderLayout.NORTH);
 		boardPanel.add(scrollPane, BorderLayout.CENTER);
-
-		getContentPane().remove(scrollPane);
 		getContentPane().add(boardPanel, BorderLayout.CENTER);
 
 		GameStatusPanel statusPanel = new GameStatusPanel();

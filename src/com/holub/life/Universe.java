@@ -56,46 +56,26 @@ public class Universe extends JPanel
 			new CopyOnWriteArrayList<>();
 	private int generationCount = 0;
 
-	private static final int BOARD_SIZE = 256;
-	private static final int CELL_SIZE = 8;
-
 	private final ZoomModel zoomModel = new ZoomModel();
 
+	public ZoomModel getZoomModel()		{ return zoomModel; }
+	public double getZoomLevel()		{ return zoomModel.getZoomLevel(); }
+	public void   setZoomLevel(double z){ zoomModel.setZoomLevel(z);	   }
+	public void   zoomIn()				{ zoomModel.zoomIn();			   }
+	public void   zoomOut()				{ zoomModel.zoomOut();			   }
+	public void   resetZoom()			{ zoomModel.resetZoom();		   }
 
-	public double getZoomLevel() {
-		return zoomModel.getZoomLevel();
-	}
-
-	public void setZoomLevel(double zoom) {
-		zoomModel.setZoomLevel(zoom);
-
-		int size = (int) Math.round(
-				BOARD_SIZE * CELL_SIZE * zoomModel.getZoomLevel()
-		);
+	private void updateCanvasSize()
+	{	int size = (int) Math.round(outermostCell.widthInCells()
+				* DEFAULT_CELL_SIZE * zoomModel.getZoomLevel());
 
 		Dimension newSize = new Dimension(size, size);
-
 		setPreferredSize(newSize);
 		setMinimumSize(newSize);
 		setMaximumSize(newSize);
 
 		revalidate();
 		repaint();
-	}
-
-	public void zoomIn() {
-		zoomModel.zoomIn();
-		setZoomLevel(zoomModel.getZoomLevel());
-	}
-
-	public void zoomOut() {
-		zoomModel.zoomOut();
-		setZoomLevel(zoomModel.getZoomLevel());
-	}
-
-	public void resetZoom() {
-		zoomModel.resetZoom();
-		setZoomLevel(zoomModel.getZoomLevel());
 	}
 
 
@@ -110,19 +90,9 @@ public class Universe extends JPanel
 				new Neighborhood(DEFAULT_GRID_SIZE, new Resident())
 		);
 
-		final Dimension PREFERRED_SIZE =
-						new Dimension
-						(  outermostCell.widthInCells() * DEFAULT_CELL_SIZE,
-						   outermostCell.widthInCells() * DEFAULT_CELL_SIZE
-						);
-
 		setBackground(NeonTheme.BACKGROUND);
-
-		Dimension canvasSize = new Dimension(2048, 2048);
-
-		setPreferredSize(canvasSize);
-		setMinimumSize(canvasSize);
-		setMaximumSize(canvasSize);
+		updateCanvasSize();
+		zoomModel.addZoomListener(zoom -> updateCanvasSize());
 
 		setOpaque		( true			 );
 
