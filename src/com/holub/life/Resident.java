@@ -94,6 +94,12 @@ public final class Resident implements Cell
 		return changed;
 	}
 
+	/** Only used when a board is restored from a BoardSnapshot. */
+	void restoreAge(int age)
+	{	if( amAlive )
+			this.age = age;
+	}
+
 	public int getAge()
 	{	return amAlive ? age : 0;
 	}

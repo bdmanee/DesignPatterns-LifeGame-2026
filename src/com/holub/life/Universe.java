@@ -29,6 +29,8 @@ public class Universe extends JPanel
 	private static final int  DEFAULT_CELL_SIZE = 8;
 
 	private final LifeBoard board = new LifeBoard();
+	private final GameFacade game =
+			new GameFacade(Clock.instance(), board, new CommandHistory());
 	private final ZoomModel zoomModel = new ZoomModel();
 
 	private LifePattern selectedPattern = null;
@@ -49,6 +51,7 @@ public class Universe extends JPanel
 		MouseAdapter mouseHandler = new MouseAdapter()
 		{
 			private Point lastDragPoint = null;
+			private boolean inStroke = false;
 
 			@Override
 			public void mousePressed(MouseEvent e)
@@ -62,11 +65,23 @@ public class Universe extends JPanel
 				if (cell == null)
 					return;
 
+				if (drawingMode == DrawingMode.CLICK) {
+					// one click is one command
+					if (selectedPattern != null)
+						game.placePattern(selectedPattern, cell.y, cell.x);
+					else
+						game.toggleCell(cell.y, cell.x);
+					return;
+				}
+
+				// DRAW and ERASE: everything until the mouse is
+				// released is one undo step
+				inStroke = true;
+				game.beginStroke();
+
 				if (selectedPattern != null) {
 					board.placePattern(selectedPattern, cell.y, cell.x);
 					stampTool.shouldStamp(cell.y, cell.x);
-				} else if (drawingMode == DrawingMode.CLICK) {
-					board.toggle(cell.y, cell.x);
 				} else {
 					board.setAlive(cell.y, cell.x,
 							drawingMode == DrawingMode.DRAW);
@@ -76,6 +91,9 @@ public class Universe extends JPanel
 			@Override
 			public void mouseDragged(MouseEvent e)
 			{	if (!SwingUtilities.isLeftMouseButton(e))
+					return;
+
+				if (!inStroke)
 					return;
 
 				if (lastDragPoint == null)
@@ -107,6 +125,10 @@ public class Universe extends JPanel
 			@Override
 			public void mouseReleased(MouseEvent e)
 			{	lastDragPoint = null;
+				if (inStroke) {
+					inStroke = false;
+					game.endStroke(drawingMode == DrawingMode.ERASE ? "Erase" : "Draw");
+				}
 			}
 		};
 
@@ -145,17 +167,26 @@ public class Universe extends JPanel
 					});
 		}
 
-		MenuSite.addLine( this, "Grid", "Clear",
-				e -> {
-					Clock.instance().stop();
-					board.clear();
-				});
+		MenuSite.addLine( this, "Grid", "Clear", e -> game.clear() );
 
 		MenuSite.addLine( this, "Grid", "Load",  e -> doLoad()  );
 		MenuSite.addLine( this, "Grid", "Store", e -> doStore() );
 		MenuSite.addLine( this, "Grid", "Exit",  e -> System.exit(0) );
 
-		Clock.instance().addClockListener( () -> board.tick() );
+		MenuSite.addLine( this, "Edit", "Undo", e -> game.undo() );
+		MenuSite.addLine( this, "Edit", "Redo", e -> game.redo() );
+
+		// ctrl+Z / ctrl+Y anywhere in the window
+		InputMap keys = getInputMap(WHEN_IN_FOCUSED_WINDOW);
+		int ctrl = Toolkit.getDefaultToolkit().getMenuShortcutKeyMask();
+		keys.put(KeyStroke.getKeyStroke(KeyEvent.VK_Z, ctrl), "undo");
+		keys.put(KeyStroke.getKeyStroke(KeyEvent.VK_Y, ctrl), "redo");
+		getActionMap().put("undo", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) { game.undo(); }
+		});
+		getActionMap().put("redo", new AbstractAction() {
+			public void actionPerformed(ActionEvent e) { game.redo(); }
+		});
 	}
 
 	private void addPatternMenuItem(String name)
@@ -174,6 +205,10 @@ public class Universe extends JPanel
 
 	public LifeBoard getBoard()
 	{	return board;
+	}
+
+	public GameFacade getGame()
+	{	return game;
 	}
 
 	public ZoomModel getZoomModel()
@@ -209,7 +244,7 @@ public class Universe extends JPanel
 	}
 
 	public void placePattern(LifePattern pattern, int startRow, int startColumn)
-	{	board.placePattern(pattern, startRow, startColumn);
+	{	game.placePattern(pattern, startRow, startColumn);
 	}
 
 	public void setDrawingMode(DrawingMode mode) {
@@ -300,10 +335,9 @@ public class Universe extends JPanel
 	private void doLoad()
 	{	try
 		{	File file = Files.userSelected(".", ".life", "Life File", "Load");
-			Clock.instance().stop();
 
 			try (FileInputStream in = new FileInputStream(file)) {
-				board.load(in);
+				game.load(in);
 			}
 		}
 		catch( IOException theException )
@@ -316,7 +350,7 @@ public class Universe extends JPanel
 	private void doStore()
 	{	try
 		{	File file = Files.userSelected(".", ".life", "Life File", "Write");
-			Clock.instance().stop();
+			game.pause();
 
 			try (FileOutputStream out = new FileOutputStream(file)) {
 				board.store(out);

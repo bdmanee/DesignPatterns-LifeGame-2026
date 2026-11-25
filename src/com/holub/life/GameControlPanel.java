@@ -12,10 +12,12 @@ public class GameControlPanel extends JPanel {
         JButton playButton = new JButton("Play");
         JButton pauseButton = new JButton("Pause");
         JButton stepButton = new JButton("Step");
+        JButton undoButton = new JButton("Undo");
+        JButton redoButton = new JButton("Redo");
 
         setBackground(NeonTheme.BACKGROUND);
 
-        JButton[] buttons = {playButton, pauseButton, stepButton};
+        JButton[] buttons = {playButton, pauseButton, stepButton, undoButton, redoButton};
 
         for (JButton button : buttons) {
             button.setFont(new Font("SansSerif", Font.BOLD, 14));
@@ -39,7 +41,7 @@ public class GameControlPanel extends JPanel {
         spacingSlider.setPreferredSize(new Dimension(120, 35));
         spacingSlider.setToolTipText("Distance between pattern stamps");
 
-        GameFacade game = new GameFacade();
+        GameFacade game = Universe.instance().getGame();
 
         GameCommand playCommand = new PlayCommand(
                 game,
@@ -53,9 +55,27 @@ public class GameControlPanel extends JPanel {
         pauseButton.addActionListener(e -> pauseCommand.execute());
         stepButton.addActionListener(e -> stepCommand.execute());
 
+        GameCommand undoCommand = game::undo;
+        GameCommand redoCommand = game::redo;
+        undoButton.addActionListener(e -> undoCommand.execute());
+        redoButton.addActionListener(e -> redoCommand.execute());
+
+        // enable the buttons only when there is something to undo/redo
+        CommandHistory history = game.getHistory();
+        CommandHistory.Listener historyListener = h -> {
+            undoButton.setEnabled(h.canUndo());
+            redoButton.setEnabled(h.canRedo());
+            undoButton.setToolTipText(h.canUndo() ? "Undo " + h.getUndoName() : null);
+            redoButton.setToolTipText(h.canRedo() ? "Redo " + h.getRedoName() : null);
+        };
+        history.addListener(historyListener);
+        historyListener.historyChanged(history);
+
         add(playButton);
         add(pauseButton);
         add(stepButton);
+        add(undoButton);
+        add(redoButton);
 
         JComboBox<DrawingMode> drawingModeBox =
                 new JComboBox<>(DrawingMode.values());

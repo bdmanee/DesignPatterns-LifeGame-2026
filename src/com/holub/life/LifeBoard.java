@@ -6,7 +6,9 @@ import java.awt.Rectangle;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -138,6 +140,43 @@ public class LifeBoard {
         outermostCell.accept(visitor, 0, 0);
     }
 
+    /** Memento: remember the current cells, their ages and the generation. */
+    public BoardSnapshot createSnapshot() {
+        Map<Point, Integer> cells = new HashMap<>();
+
+        accept((resident, row, column) -> {
+            if (resident.isAlive()) {
+                cells.put(new Point(column, row), resident.getAge());
+            }
+        });
+
+        return new BoardSnapshot(generation, cells);
+    }
+
+    /** Put the board back to the state saved in the snapshot. */
+    public void restore(BoardSnapshot snapshot) {
+        if (snapshot == null) {
+            throw new IllegalArgumentException("Snapshot cannot be null");
+        }
+
+        outermostCell.clear();
+
+        Map<Point, Integer> cells = snapshot.getAliveCells();
+        for (Point cell : cells.keySet()) {
+            outermostCell.setAliveAt(cell.y, cell.x, true);
+        }
+
+        accept((resident, row, column) -> {
+            Integer age = cells.get(new Point(column, row));
+            if (age != null) {
+                resident.restoreAge(age);
+            }
+        });
+
+        generation = snapshot.getGeneration();
+        fireChanged();
+    }
+
     /** Save the board using the original Holub memento format. */
     public void store(OutputStream out) throws IOException {
         Storable memento = outermostCell.createMemento();
@@ -179,10 +218,5 @@ public class LifeBoard {
         for (GameStateListener listener : listeners) {
             listener.onGameStateChanged(generation, aliveCells);
         }
-    }
-
-    /** Used when restoring a saved state (for example by undo). */
-    void setGeneration(int generation) {
-        this.generation = generation;
     }
 }
