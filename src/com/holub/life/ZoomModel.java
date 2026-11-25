@@ -24,6 +24,11 @@ public class ZoomModel {
         return (int) Math.round(zoomLevel * 100);
     }
 
+    /** Size of one cell in whole pixels at the current zoom (at least 1). */
+    public int getCellPixels(int cellPixelsAt100) {
+        return Math.max(1, (int) Math.round(cellPixelsAt100 * zoomLevel));
+    }
+
     public void setZoomLevel(double zoom) {
         if (!Double.isFinite(zoom)) {
             throw new IllegalArgumentException(

@@ -62,4 +62,18 @@ public class ZoomModelTest {
         assertEquals(3, heard.size());
         assertEquals(1.0, heard.get(2));
     }
+
+    @Test
+    void cellSizeIsAlwaysWholePixels() {
+        ZoomModel zoom = new ZoomModel();
+
+        assertEquals(8, zoom.getCellPixels(8));
+
+        zoom.setZoomLevel(1.77);
+        assertEquals(14, zoom.getCellPixels(8));
+
+        zoom.setZoomLevel(0.25);
+        assertEquals(2, zoom.getCellPixels(8));
+        assertEquals(1, zoom.getCellPixels(1), "never smaller than one pixel");
+    }
 }

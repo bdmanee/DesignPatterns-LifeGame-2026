@@ -280,8 +280,10 @@ public class Universe extends JPanel
 	public void   resetZoom()			{ zoomModel.resetZoom();		   }
 
 	private void updateCanvasSize()
-	{	int size = (int) Math.round(
-				board.getSize() * DEFAULT_CELL_SIZE * zoomModel.getZoomLevel());
+	{	// Every cell must be a whole number of pixels. Neighborhood.redraw()
+		// divides the width with integer division, so with a size like
+		// 3625 pixels the drawing and the mouse position would not match.
+		int size = board.getSize() * zoomModel.getCellPixels(DEFAULT_CELL_SIZE);
 
 		Dimension newSize = new Dimension(size, size);
 		setPreferredSize(newSize);
