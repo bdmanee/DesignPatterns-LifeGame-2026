@@ -1,8 +1,8 @@
 Design Patterns 2026 Term Project - Life Game
 =============================================
 
-Team: [team number]
-Member: [student ID] [name]
+Team: 4
+Member: 20236029 Badamsuren
 GitHub: https://github.com/bdmanee/DesignPatterns-LifeGame-2026
 
 
