@@ -56,6 +56,7 @@ Patterns used
   test/                         JUnit 5 tests
   testdata/patterns/            sample .rle and .cells pattern files
   testdata/saved/               .life boards saved by the old version
+  bin/                          compiled .class files
   docs/                         project document (PDF) and slides (PDF)
   video/                        demo video (or link)
 
