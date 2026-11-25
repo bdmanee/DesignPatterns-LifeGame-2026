@@ -2,6 +2,8 @@ package com.holub.life;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * One simple entry point for the UI. Buttons, menus and the mouse
@@ -17,7 +19,12 @@ public class GameFacade {
     private final LifeBoard board;
     private final CommandHistory history;
 
-    private boolean running = false;
+    public static final GameState PAUSED = new PausedState();
+    public static final GameState RUNNING = new RunningState();
+
+    private GameState state = PAUSED;
+    private final List<RunStateListener> stateListeners = new CopyOnWriteArrayList<>();
+
     private BoardSnapshot runStart = null;
     private BoardSnapshot strokeStart = null;
 
@@ -29,35 +36,63 @@ public class GameFacade {
         clock.addClockListener(board::tick);
     }
 
-    // ---- running -----------------------------------------------------
+    // ---- running (forwarded to the current state) -------------------
 
     public void play(int speed) {
-        if (!running) {
-            runStart = board.createSnapshot();
-            running = true;
-        }
-        clock.startTicking(speed);
+        state.play(this, speed);
     }
 
     public void pause() {
-        if (running) {
-            clock.stop();
-            running = false;
-            recordRun();
-        }
+        state.pause(this);
     }
 
     public void step() {
-        pause();
-        history.execute(new TickCommand(board));
+        state.step(this);
     }
 
     public boolean isRunning() {
-        return running;
+        return state.isRunning();
+    }
+
+    public GameState getState() {
+        return state;
+    }
+
+    public void addRunStateListener(RunStateListener listener) {
+        stateListeners.add(listener);
+    }
+
+    // ---- used by the state objects ------------------------------------
+
+    void setState(GameState newState) {
+        if (newState == state) {
+            return;
+        }
+
+        state = newState;
+        for (RunStateListener listener : stateListeners) {
+            listener.runStateChanged(state);
+        }
+    }
+
+    void startClock(int speed) {
+        clock.startTicking(speed);
+    }
+
+    void stopClock() {
+        clock.stop();
+    }
+
+    void executeStep() {
+        history.execute(new TickCommand(board));
+    }
+
+    void startRunRecording() {
+        runStart = board.createSnapshot();
     }
 
     /** The generations played while running become one "Run" command. */
-    private void recordRun() {
+    void finishRunRecording() {
         if (runStart != null) {
             RecordedChangeCommand run = new RecordedChangeCommand(board, "Run", runStart);
             if (run.changedAnything()) {
@@ -70,13 +105,9 @@ public class GameFacade {
     // ---- editing -----------------------------------------------------
 
     private void doEdit(UndoableCommand command) {
-        // an edit while running splits the run in two, so undo
-        // gives back the board just before the edit
-        recordRun();
+        state.beforeEdit(this);
         history.execute(command);
-        if (running) {
-            runStart = board.createSnapshot();
-        }
+        state.afterEdit(this);
     }
 
     public void toggleCell(int row, int column) {
@@ -94,7 +125,7 @@ public class GameFacade {
 
     /** Call when the mouse is pressed for a drawing stroke. */
     public void beginStroke() {
-        recordRun();
+        state.beforeEdit(this);
         strokeStart = board.createSnapshot();
     }
 
@@ -110,9 +141,7 @@ public class GameFacade {
         }
         strokeStart = null;
 
-        if (running) {
-            runStart = board.createSnapshot();
-        }
+        state.afterEdit(this);
     }
 
     public void load(InputStream in) throws IOException {

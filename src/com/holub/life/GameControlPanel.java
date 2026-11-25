@@ -71,6 +71,14 @@ public class GameControlPanel extends JPanel {
         history.addListener(historyListener);
         historyListener.historyChanged(history);
 
+        // Play is only useful when paused and Pause only when running
+        RunStateListener stateListener = state -> {
+            playButton.setEnabled(!state.isRunning());
+            pauseButton.setEnabled(state.isRunning());
+        };
+        game.addRunStateListener(stateListener);
+        stateListener.runStateChanged(game.getState());
+
         add(playButton);
         add(pauseButton);
         add(stepButton);

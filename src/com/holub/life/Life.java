@@ -75,6 +75,7 @@ public final class Life extends JFrame
 		GameStatusPanel statusPanel = new GameStatusPanel();
 
 		Universe.instance().getBoard().addGameStateListener(statusPanel);
+		Universe.instance().getGame().addRunStateListener(statusPanel);
 
 		getContentPane().add(statusPanel, BorderLayout.NORTH);
 
