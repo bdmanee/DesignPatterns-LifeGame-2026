@@ -21,4 +21,9 @@ public final class RuleManager {
 
         currentRule = rule;
     }
+
+    /** Go back to the default rule (Conway). Mostly for tests. */
+    public static void reset() {
+        currentRule = new ConwayRule();
+    }
 }

@@ -79,31 +79,7 @@ public final class Life extends JFrame
 		getContentPane().add(statusPanel, BorderLayout.NORTH);
 		getContentPane().add(new GameControlPanel(), BorderLayout.SOUTH);
 
-		JMenu rulesMenu = new JMenu("Rules");
-
-		JRadioButtonMenuItem conwayItem =
-				new JRadioButtonMenuItem("Conway", true);
-
-		JRadioButtonMenuItem highLifeItem =
-				new JRadioButtonMenuItem("HighLife");
-
-		ButtonGroup ruleGroup = new ButtonGroup();
-		ruleGroup.add(conwayItem);
-		ruleGroup.add(highLifeItem);
-
-		conwayItem.addActionListener(e -> {
-			RuleManager.setRule(new ConwayRule());
-			setTitle("Game of Life - Conway");
-		});
-
-		highLifeItem.addActionListener(e -> {
-			RuleManager.setRule(new HighLifeRule());
-			setTitle("Game of Life - HighLife");
-		});
-
-		rulesMenu.add(conwayItem);
-		rulesMenu.add(highLifeItem);
-
+		JMenu rulesMenu = createRulesMenu();
 		getJMenuBar().add(rulesMenu);
 
 // Apply neon styling to all menus
@@ -115,5 +91,59 @@ public final class Life extends JFrame
 		setVisible(true);
 
 
+	}
+
+	/** Build the Rules menu from the RuleCatalog, plus a "Custom..."
+	 *  item that reads a B/S rule typed by the user.
+	 */
+	private JMenu createRulesMenu()
+	{	JMenu rulesMenu = new JMenu("Rules");
+		ButtonGroup ruleGroup = new ButtonGroup();
+
+		for (LifeRule rule : RuleCatalog.presets()) {
+			rulesMenu.add(addRuleItem(rulesMenu, ruleGroup, rule,
+					rule.getName().equals(RuleManager.getRule().getName())));
+		}
+
+		rulesMenu.addSeparator();
+
+		JMenuItem customItem = new JMenuItem("Custom (B/S)...");
+		customItem.addActionListener(e -> {
+			String notation = JOptionPane.showInputDialog(this,
+					"Enter a rule like B36/S23", "Custom Rule",
+					JOptionPane.QUESTION_MESSAGE);
+
+			if (notation == null || notation.trim().isEmpty())
+				return;
+
+			try {
+				LifeRule rule = RuleBuilder.fromNotation(notation).build();
+				// put it above the separator and the "Custom..." item
+				rulesMenu.insert(addRuleItem(rulesMenu, ruleGroup, rule, true),
+								 rulesMenu.getItemCount() - 2);
+				useRule(rule);
+				NeonTheme.applyMenuTheme(getJMenuBar());
+			} catch (RuntimeException ex) {
+				JOptionPane.showMessageDialog(this, ex.getMessage(),
+						"Invalid Rule", JOptionPane.ERROR_MESSAGE);
+			}
+		});
+		rulesMenu.add(customItem);
+
+		return rulesMenu;
+	}
+
+	private JRadioButtonMenuItem addRuleItem(JMenu menu, ButtonGroup group,
+											 LifeRule rule, boolean selected)
+	{	JRadioButtonMenuItem item =
+				new JRadioButtonMenuItem(rule.getName(), selected);
+		item.addActionListener(e -> useRule(rule));
+		group.add(item);
+		return item;
+	}
+
+	private void useRule(LifeRule rule)
+	{	RuleManager.setRule(rule);
+		setTitle("Game of Life - " + rule.getName());
 	}
 }

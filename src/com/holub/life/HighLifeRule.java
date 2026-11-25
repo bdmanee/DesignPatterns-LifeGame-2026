@@ -11,4 +11,9 @@ public class HighLifeRule implements LifeRule {
 
         return livingNeighbors == 3 || livingNeighbors == 6;
     }
+
+    @Override
+    public String getName() {
+        return "HighLife";
+    }
 }

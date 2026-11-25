@@ -11,4 +11,9 @@ public class ConwayRule implements LifeRule {
 
         return livingNeighbors == 3;
     }
+
+    @Override
+    public String getName() {
+        return "Conway";
+    }
 }
