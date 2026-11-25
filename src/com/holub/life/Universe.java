@@ -133,6 +133,9 @@ public class Universe extends JPanel
 			addPatternMenuItem(name);
 		patterns.addListener(pattern -> addPatternMenuItem(pattern.getName()));
 
+		MenuSite.addLine(this, "Patterns", "Import Pattern File...",
+				e -> doImportPattern());
+
 		MenuSite.addLine( this, "Grid", "Clear",
 				e -> {
 					Clock.instance().stop();
@@ -246,6 +249,44 @@ public class Universe extends JPanel
 	}
 
 	// ---- load / store ----------------------------------------------
+
+	/** Import a .rle or .cells file (for example one downloaded from
+	 *  the LifeWiki), add it to the Patterns menu and select it.
+	 */
+	private void doImportPattern()
+	{	JFileChooser chooser = new JFileChooser(new File("."));
+		chooser.setDialogTitle("Import Pattern");
+		chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter(
+				"Life patterns (*.rle, *.cells)", "rle", "cells"));
+
+		if (chooser.showOpenDialog(this) != JFileChooser.APPROVE_OPTION)
+			return;
+
+		File file = chooser.getSelectedFile();
+
+		try (Reader in = new BufferedReader(new FileReader(file)))
+		{	PatternReader reader = PatternReaders.forFileName(file.getName());
+			LifePattern pattern = reader.read(in,
+					PatternReaders.baseName(file.getName()));
+
+			PatternRegistry registry = PatternRegistry.getDefault();
+			if (registry.contains(pattern.getName()))
+				pattern = pattern.rename(pattern.getName() + " ("
+						+ PatternReaders.baseName(file.getName()) + ")");
+			if (!registry.contains(pattern.getName()))
+				registry.register(pattern);
+
+			selectedPattern = registry.create(pattern.getName());
+			JRootPane root = SwingUtilities.getRootPane(this);
+			if (root != null)
+				NeonTheme.applyMenuTheme(root.getJMenuBar());
+		}
+		catch (IOException | IllegalArgumentException ex)
+		{	JOptionPane.showMessageDialog(this,
+					"Could not import pattern:\n" + ex.getMessage(),
+					"Import Pattern", JOptionPane.ERROR_MESSAGE);
+		}
+	}
 
 	private void doLoad()
 	{	try

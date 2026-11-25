@@ -1,0 +1,4 @@
+#N Acorn
+#C A methuselah that takes 5206 generations to stabilize.
+x = 7, y = 3, rule = B3/S23
+bo5b$3bo3b$2o2b3o!

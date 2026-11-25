@@ -1,0 +1,4 @@
+#N Replicator
+#C HighLife replicator. Use Rules > HighLife.
+x = 5, y = 5, rule = B36/S23
+2b3o$bo2bo$o3bo$o2bob$3o!
