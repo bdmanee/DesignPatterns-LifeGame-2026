@@ -13,3 +13,6 @@ target/
 # System files
 .DS_Store
 Thumbs.db
+
+# generated logs
+gitlog.txt
