@@ -77,6 +77,10 @@ public final class Life extends JFrame
 		Universe.instance().getBoard().addGameStateListener(statusPanel);
 
 		getContentPane().add(statusPanel, BorderLayout.NORTH);
+
+		StatisticsTracker statistics =
+				new StatisticsTracker(Universe.instance().getBoard());
+		getContentPane().add(new StatisticsPanel(statistics), BorderLayout.EAST);
 		getContentPane().add(new GameControlPanel(), BorderLayout.SOUTH);
 
 		JMenu rulesMenu = createRulesMenu();

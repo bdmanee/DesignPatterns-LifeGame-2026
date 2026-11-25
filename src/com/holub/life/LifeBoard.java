@@ -133,6 +133,11 @@ public class LifeBoard {
         return collector.getAliveCells();
     }
 
+    /** Run a visitor over every cell of the board. */
+    public void accept(CellVisitor visitor) {
+        outermostCell.accept(visitor, 0, 0);
+    }
+
     /** Save the board using the original Holub memento format. */
     public void store(OutputStream out) throws IOException {
         Storable memento = outermostCell.createMemento();
