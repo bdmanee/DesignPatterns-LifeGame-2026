@@ -136,6 +136,15 @@ public class Universe extends JPanel
 		MenuSite.addLine(this, "Patterns", "Import Pattern File...",
 				e -> doImportPattern());
 
+		for (CellColorStrategy colors : new CellColorStrategy[] {
+				new ClassicColorStrategy(), new AgeColorStrategy() })
+		{	MenuSite.addLine(this, "Colors", colors.getName(),
+					e -> {
+						CellColors.setStrategy(colors);
+						repaint();
+					});
+		}
+
 		MenuSite.addLine( this, "Grid", "Clear",
 				e -> {
 					Clock.instance().stop();

@@ -20,11 +20,14 @@ import com.holub.life.Universe;
 public final class Resident implements Cell
 {
 	private static final Color BORDER_COLOR = NeonTheme.GRID;
-	private static final Color LIVE_COLOR = NeonTheme.CYAN;
-	private static final Color DEAD_COLOR = NeonTheme.BACKGROUND;
 
 	private boolean amAlive 	= false;
 	private boolean willBeAlive	= false;
+
+	/** Number of generations this cell has been alive without
+	 *  dying. A newborn cell has age 0.
+	 */
+	private int		age			= 0;
 
 	private boolean isStable(){return amAlive == willBeAlive; }
 
@@ -81,13 +84,23 @@ public final class Resident implements Cell
 
 	public boolean transition() {
 		boolean changed = !isStable();
+
+		if( amAlive && willBeAlive )
+			++age;
+		else
+			age = 0;
+
 		amAlive = willBeAlive;
 		return changed;
 	}
 
+	public int getAge()
+	{	return amAlive ? age : 0;
+	}
+
 	public void redraw(Graphics g, Rectangle here, boolean drawAll)
     {   g = g.create();
-		g.setColor(amAlive ? LIVE_COLOR : DEAD_COLOR );
+		g.setColor( CellColors.getStrategy().colorFor(amAlive, getAge()) );
 		g.fillRect(here.x+1, here.y+1, here.width-1, here.height-1);
 
 		// Doesn't draw a line on the far right and bottom of the
@@ -102,6 +115,7 @@ public final class Resident implements Cell
 
 	public void userClicked(Point here, Rectangle surface)
 	{	amAlive = !amAlive;
+		age = 0;
 	}
 
 	public boolean setAliveAt(int row, int column, boolean alive)
@@ -109,6 +123,7 @@ public final class Resident implements Cell
 		if( amAlive == alive )
 			return false;
 		amAlive = alive;
+		age = 0;
 		return true;
 	}
 
@@ -121,7 +136,7 @@ public final class Resident implements Cell
 	{	visitor.visitResident(this, row, column);
 	}
 
-	public void	   clear()			{amAlive = willBeAlive = false; }
+	public void	   clear()			{amAlive = willBeAlive = false; age = 0; }
 	public boolean isAlive()		{return amAlive;			    }
 	public Cell    create()			{return new Resident();			}
 	public int 	   widthInCells()	{return 1;}
@@ -134,7 +149,8 @@ public final class Resident implements Cell
 	{
 		Memento memento = (Memento)blob;
 		if( doLoad )
-		{	if( amAlive = willBeAlive = memento.isAlive(upperLeft) )
+		{	age = 0;
+			if( amAlive = willBeAlive = memento.isAlive(upperLeft) )
 				return true;
 		}
 		else if( amAlive )  					// store only live cells

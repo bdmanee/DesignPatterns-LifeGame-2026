@@ -56,11 +56,13 @@ public class LifeBoard {
     public void tick() {
         generation++;
 
-        if (outermostCell.figureNextState(
+        outermostCell.figureNextState(
                 Cell.DUMMY, Cell.DUMMY, Cell.DUMMY, Cell.DUMMY,
-                Cell.DUMMY, Cell.DUMMY, Cell.DUMMY, Cell.DUMMY)) {
-            outermostCell.transition();
-        }
+                Cell.DUMMY, Cell.DUMMY, Cell.DUMMY, Cell.DUMMY);
+
+        // transition() is always called (even when nothing changes)
+        // so that the age of stable cells keeps counting up.
+        outermostCell.transition();
 
         fireChanged();
     }
@@ -77,6 +79,13 @@ public class LifeBoard {
         }
 
         return changed;
+    }
+
+    /** Age of the cell at (row, column), 0 if dead or outside the board. */
+    public int getAge(int row, int column) {
+        CellAgeFinder finder = new CellAgeFinder(row, column);
+        outermostCell.accept(finder, 0, 0);
+        return finder.getAge();
     }
 
     public void toggle(int row, int column) {
