@@ -1,3 +1,4 @@
+import com.holub.life.BoardSnapshot;
 import com.holub.life.BoardStatistics;
 import com.holub.life.LifeBoard;
 import com.holub.life.PatternFactory;
@@ -99,6 +100,25 @@ public class StatisticsTest {
 
         assertEquals(List.of(0), tracker.getPopulationHistory());
         assertEquals(0, tracker.getFirstGeneration());
+        assertEquals(0, tracker.getPeakPopulation(), "peak of the old run is gone");
+    }
+
+    @Test
+    void peakIsRecomputedAfterGoingBack() {
+        LifeBoard board = new LifeBoard(4, 8);
+        StatisticsTracker tracker = new StatisticsTracker(board);
+        board.placePattern(PatternFactory.createPattern("R-pentomino"), 12, 12);
+        BoardSnapshot start = board.createSnapshot();
+
+        for (int i = 0; i < 20; i++) {
+            board.tick();
+        }
+        assertTrue(tracker.getPeakPopulation() > 5);
+
+        board.restore(start);   // like undo back to generation 0
+
+        assertEquals(5, tracker.getPeakPopulation());
+        assertEquals(0, tracker.getPeakGeneration());
     }
 
     @Test

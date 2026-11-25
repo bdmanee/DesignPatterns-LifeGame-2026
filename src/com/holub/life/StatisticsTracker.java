@@ -68,11 +68,12 @@ public class StatisticsTracker implements GameStateListener {
             firstGeneration = generation;
             peakPopulation = 0;
         } else if (generation <= lastGeneration) {
-            // went back a few generations (undo) or the board was
+            // went back a few generations (undo, clear) or the board was
             // edited without a tick: forget the newer values
             while (firstGeneration + populationHistory.size() > generation) {
                 populationHistory.remove(populationHistory.size() - 1);
             }
+            recomputePeak();
         }
 
         populationHistory.add(population);
@@ -85,6 +86,18 @@ public class StatisticsTracker implements GameStateListener {
         if (population >= peakPopulation) {
             peakPopulation = population;
             peakGeneration = generation;
+        }
+    }
+
+    private void recomputePeak() {
+        peakPopulation = 0;
+        peakGeneration = firstGeneration;
+
+        for (int i = 0; i < populationHistory.size(); i++) {
+            if (populationHistory.get(i) >= peakPopulation) {
+                peakPopulation = populationHistory.get(i);
+                peakGeneration = firstGeneration + i;
+            }
         }
     }
 

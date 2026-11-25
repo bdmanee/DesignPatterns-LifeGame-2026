@@ -77,7 +77,7 @@ Patterns used
 
 4. Tests
 --------
-  mvn test     (119 tests)
+  mvn test     (121 tests)
 
   LifeGameBaselineTest            original Conway behaviour of a cell
   LifeRuleTest, RuleBuilderTest   rules, builder, B/S notation
