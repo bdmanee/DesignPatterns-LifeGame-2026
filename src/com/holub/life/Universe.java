@@ -220,12 +220,10 @@ public class Universe extends JPanel
 	 *  The returned Point has x = column and y = row.
 	 */
 	private Point toCell(Point pixel)
-	{	if (getWidth() <= 0 || getHeight() <= 0)
-			return null;
-
-		int size = board.getSize();
-		int column = pixel.x * size / getWidth();
-		int row = pixel.y * size / getHeight();
+	{	int size = board.getSize();
+		int cellPixels = getCellPixels();
+		int column = pixel.x / cellPixels;
+		int row = pixel.y / cellPixels;
 
 		if (pixel.x < 0 || pixel.y < 0 || row >= size || column >= size)
 			return null;
@@ -279,11 +277,15 @@ public class Universe extends JPanel
 	public void   zoomOut()				{ zoomModel.zoomOut();			   }
 	public void   resetZoom()			{ zoomModel.resetZoom();		   }
 
+	private int getCellPixels()
+	{	return zoomModel.getCellPixels(DEFAULT_CELL_SIZE);
+	}
+
 	private void updateCanvasSize()
 	{	// Every cell must be a whole number of pixels. Neighborhood.redraw()
 		// divides the width with integer division, so with a size like
 		// 3625 pixels the drawing and the mouse position would not match.
-		int size = board.getSize() * zoomModel.getCellPixels(DEFAULT_CELL_SIZE);
+		int size = board.getSize() * getCellPixels();
 
 		Dimension newSize = new Dimension(size, size);
 		setPreferredSize(newSize);
@@ -367,6 +369,11 @@ public class Universe extends JPanel
 	@Override
 	protected void paintComponent(Graphics g) {
 		super.paintComponent(g);
-		board.redraw(g, new Rectangle(0, 0, getWidth(), getHeight()));
+		// Draw at the exact board size, not the panel size. When the
+		// board is smaller than the window the scroll pane makes the
+		// panel bigger, and a width that is not a multiple of the
+		// cell size makes the grid lines drift.
+		int boardPixels = board.getSize() * getCellPixels();
+		board.redraw(g, new Rectangle(0, 0, boardPixels, boardPixels));
 	}
 }
