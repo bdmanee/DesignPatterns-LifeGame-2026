@@ -1,5 +1,10 @@
 package com.holub.life;
 
+/**
+ * Kept so old code keeps working. It now just asks the
+ * PatternRegistry for a copy of the prototype instead of
+ * using a switch statement.
+ */
 public final class PatternFactory {
 
     private PatternFactory() {
@@ -7,39 +12,6 @@ public final class PatternFactory {
     }
 
     public static LifePattern createPattern(String name) {
-
-        if (name == null) {
-            throw new IllegalArgumentException(
-                    "Pattern name cannot be null"
-            );
-        }
-
-        switch (name.toLowerCase()) {
-
-            case "glider":
-                return new LifePattern("Glider", new boolean[][] {
-                        {false, true,  false},
-                        {false, false, true },
-                        {true,  true,  true }
-                });
-
-            case "blinker":
-                return new LifePattern("Blinker", new boolean[][] {
-                        {false, false, false},
-                        {true,  true,  true },
-                        {false, false, false}
-                });
-
-            case "block":
-                return new LifePattern("Block", new boolean[][] {
-                        {true, true},
-                        {true, true}
-                });
-
-            default:
-                throw new IllegalArgumentException(
-                        "Unknown pattern: " + name
-                );
-        }
+        return PatternRegistry.getDefault().create(name);
     }
 }

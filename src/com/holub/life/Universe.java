@@ -115,12 +115,23 @@ public class Universe extends JPanel
 
 		MenuSite.addLine(this, "Patterns", "Normal Click",
 				e -> selectedPattern = null);
-		MenuSite.addLine(this, "Patterns", "Glider",
-				e -> selectedPattern = PatternFactory.createPattern("glider"));
-		MenuSite.addLine(this, "Patterns", "Blinker",
-				e -> selectedPattern = PatternFactory.createPattern("blinker"));
-		MenuSite.addLine(this, "Patterns", "Block",
-				e -> selectedPattern = PatternFactory.createPattern("block"));
+		MenuSite.addLine(this, "Patterns", "Rotate Selected",
+				e -> {
+					if (selectedPattern != null)
+						selectedPattern = selectedPattern.rotateClockwise();
+				});
+		MenuSite.addLine(this, "Patterns", "Flip Selected",
+				e -> {
+					if (selectedPattern != null)
+						selectedPattern = selectedPattern.flipHorizontal();
+				});
+
+		// One menu item per prototype. Patterns registered later
+		// (for example imported from a file) get an item too.
+		PatternRegistry patterns = PatternRegistry.getDefault();
+		for (String name : patterns.getNames())
+			addPatternMenuItem(name);
+		patterns.addListener(pattern -> addPatternMenuItem(pattern.getName()));
 
 		MenuSite.addLine( this, "Grid", "Clear",
 				e -> {
@@ -133,6 +144,15 @@ public class Universe extends JPanel
 		MenuSite.addLine( this, "Grid", "Exit",  e -> System.exit(0) );
 
 		Clock.instance().addClockListener( () -> board.tick() );
+	}
+
+	private void addPatternMenuItem(String name)
+	{	MenuSite.addLine(this, "Patterns", name,
+				e -> selectedPattern = PatternRegistry.getDefault().create(name));
+	}
+
+	public LifePattern getSelectedPattern()
+	{	return selectedPattern;
 	}
 
 	/** Singleton Accessor. */
